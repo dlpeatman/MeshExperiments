@@ -1,4 +1,17 @@
-class Triangulation {
+using UnityEngine;
+using System.Linq;
+public class Triangulation {
+
+    public struct CubePoint {
+        public Vector3 vertex;
+        public float value;
+
+        public CubePoint(Vector3 vertex, float value) {
+            this.vertex = vertex;
+            this.value = value;
+        }
+    }
+
     public static int[] edgeTable = new int[256] {
         0x0  , 0x109, 0x203, 0x30a, 0x406, 0x50f, 0x605, 0x70c,
         0x80c, 0x905, 0xa0f, 0xb06, 0xc0a, 0xd03, 0xe09, 0xf00,
@@ -292,4 +305,84 @@ class Triangulation {
         {0, 3, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
         {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}
     };
+
+    public static int CalculateCubeIndex(float isoLevel, CubePoint[] cubePoints) {
+        if (cubePoints.Length != 8) {
+            throw new System.ArgumentException("CubePoints must have 8 values");
+        }
+
+        int cubeIndex = 0;
+        if (cubePoints[0].value < isoLevel) cubeIndex |= 1;
+        if (cubePoints[1].value < isoLevel) cubeIndex |= 2;
+        if (cubePoints[2].value < isoLevel) cubeIndex |= 4;
+        if (cubePoints[3].value < isoLevel) cubeIndex |= 8;
+        if (cubePoints[4].value < isoLevel) cubeIndex |= 16;
+        if (cubePoints[5].value < isoLevel) cubeIndex |= 32;
+        if (cubePoints[6].value < isoLevel) cubeIndex |= 64;
+        if (cubePoints[7].value < isoLevel) cubeIndex |= 128;
+        return cubeIndex;
+    }
+
+    public static bool IsTrivial(int cubeIndex) {
+        return (Triangulation.edgeTable[cubeIndex] == 0);
+    }
+
+    public static Vector3[] GetVertices(float isoLevel, int cubeIndex, CubePoint[] cubePoints) {
+        int indexValue = Triangulation.edgeTable[cubeIndex];
+        Vector3[] vertices = new Vector3[12];
+        /* Find the vertices where the surface intersects the cube */
+        if ((indexValue & 1) > 0)
+            vertices[0] = Interpolate(isoLevel, cubePoints[0], cubePoints[1]);
+        if ((indexValue & 2) > 0)
+            vertices[1] = Interpolate(isoLevel, cubePoints[1], cubePoints[2]);
+        if ((indexValue & 4) > 0)
+            vertices[2] = Interpolate(isoLevel, cubePoints[2], cubePoints[3]);
+        if ((indexValue & 8) > 0)
+            vertices[3] = Interpolate(isoLevel, cubePoints[3], cubePoints[0]);
+        if ((indexValue & 16) > 0)
+            vertices[4] = Interpolate(isoLevel, cubePoints[4], cubePoints[5]);
+        if ((indexValue & 32) > 0)
+            vertices[5] = Interpolate(isoLevel, cubePoints[5], cubePoints[6]);
+        if ((indexValue & 64) > 0)
+            vertices[6] = Interpolate(isoLevel, cubePoints[6], cubePoints[7]);
+        if ((indexValue & 128) > 0)
+            vertices[7] = Interpolate(isoLevel, cubePoints[7], cubePoints[4]);
+        if ((indexValue & 256) > 0)
+            vertices[8] = Interpolate(isoLevel, cubePoints[0], cubePoints[4]);
+        if ((indexValue & 512) > 0)
+            vertices[9] = Interpolate(isoLevel, cubePoints[1], cubePoints[5]);
+        if ((indexValue & 1024) > 0)
+            vertices[10] = Interpolate(isoLevel, cubePoints[2], cubePoints[6]);
+        if ((indexValue & 2048) > 0)
+            vertices[11] = Interpolate(isoLevel, cubePoints[3], cubePoints[7]);
+
+        return vertices;
+    }
+
+    public static int[] GetTriangles(int cubeIndex) {
+        int[] triangles = new int[4 * 3];
+        int j;
+        for (j = 0; Triangulation.triTable[cubeIndex, j] != -1; j += 3) {
+            triangles[j] = Triangulation.triTable[cubeIndex, j];
+            triangles[j + 1] = Triangulation.triTable[cubeIndex, j + 1];
+            triangles[j + 2] = Triangulation.triTable[cubeIndex, j + 2];
+        }
+        return triangles.Take(j).ToArray();
+    }
+
+    private static Vector3 Interpolate(float isoLevel, CubePoint p1, CubePoint p2) {
+        if (Mathf.Abs(isoLevel - p1.value) < 0.00001) {
+            return p1.vertex;
+        } else if (Mathf.Abs(isoLevel - p2.value) < 0.00001) {
+            return p2.vertex;
+        } else if (Mathf.Abs(p1.value - p2.value) < 0.00001) {
+            return p1.vertex;
+        } else {
+            float mu = (isoLevel - p1.value) / (p2.value - p1.value);
+            float x = p1.vertex.x + mu * (p2.vertex.x - p1.vertex.x);
+            float y = p1.vertex.y + mu * (p2.vertex.y - p1.vertex.y);
+            float z = p1.vertex.z + mu * (p2.vertex.z - p1.vertex.z);
+            return new Vector3(x, y, z);
+        }
+    }
 }
