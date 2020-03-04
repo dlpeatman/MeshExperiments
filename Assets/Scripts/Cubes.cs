@@ -11,18 +11,24 @@ public class Cubes : MonoBehaviour {
 
     private int width;
     private int length;
+    private int height;
     private float xNoiseOffset;
+    private float yNoiseOffset;
     private float zNoiseOffset;
     private float scale;
+    private float isoLevel;
 
     public int Width { get => width; }
     public int Length { get => length; }
+    public int Height { get => height; set => height = value; }
     public float XNoiseOffset { get => xNoiseOffset; set => xNoiseOffset = value; }
+    public float YNoiseOffset { get => yNoiseOffset; set => yNoiseOffset = value; }
     public float ZNoiseOffset { get => zNoiseOffset; set => zNoiseOffset = value; }
     public float Scale { get => scale; set => scale = value; }
+    public float IsoLevel { get => isoLevel; set => isoLevel = value; }
 
-    public Cubes(int width, int length, float xNoiseOffset, float zNoiseOffset, float scale) {
-        Reset(width, length, xNoiseOffset, zNoiseOffset, scale);
+    public Cubes(int width, int length, int height, float xNoiseOffset, float yNoiseOffset, float zNoiseOffset, float scale, float isoLevel) {
+        Reset(width, length, height, xNoiseOffset, yNoiseOffset, zNoiseOffset, scale, isoLevel);
     }
 
     void Start() {
@@ -33,12 +39,15 @@ public class Cubes : MonoBehaviour {
         Generate();
     }
 
-    public void Reset(int width, int length, float xNoiseOffset, float zNoiseOffset, float scale) {
+    public void Reset(int width, int length, int height, float xNoiseOffset, float yNoiseOffset, float zNoiseOffset, float scale, float isoLevel) {
         this.width = width;
         this.length = length;
+        this.Height = height;
         this.xNoiseOffset = xNoiseOffset;
+        this.yNoiseOffset = yNoiseOffset;
         this.zNoiseOffset = zNoiseOffset;
         this.scale = scale;
+        this.isoLevel = isoLevel;
 
         Generate();
     }
@@ -59,27 +68,29 @@ public class Cubes : MonoBehaviour {
         var black = new Color32(0, 0, 0, 255);
         var white = new Color32(255, 255, 255, 255);
 
-        Vector3[] vertices = new Vector3[width * length * 8];
-        Color32[] colors = new Color32[width * length * 8];
-        int[] triangles = new int[width * length * trianglesPerCube];
+        Vector3[] vertices = new Vector3[width * length * height * 8];
+        Color32[] colors = new Color32[width * length * height * 8];
+        int[] triangles = new int[width * length * height * trianglesPerCube];
 
         int cubeIndex = 0;
-        for (int i = 0; i < length; i++) {
-            for (int j = 0; j < width; j++, cubeIndex++) {
-                Vector3 origin = new Vector3(-width / 2f + j, 0, -length / 2f + i);
-                int vertexOffset = cubeIndex * 8;
-                int triangleOffset = cubeIndex * trianglesPerCube;
+        for (int y = 0; y < height; y++) {
+            for (int z = 0; z < length; z++) {
+                for (int x = 0; x < width; x++, cubeIndex++) {
+                    Vector3 origin = new Vector3(-width / 2f + x, -height / 2f + y, -length / 2f + z);
+                    int vertexOffset = cubeIndex * 8;
+                    int triangleOffset = cubeIndex * trianglesPerCube;
 
-                Vector3[] cubeVertices = CreateCubeVertices(origin);
-                float perlinValue = Mathf.PerlinNoise(xNoiseOffset + j * scale, zNoiseOffset + i * scale);
-                for (int x = 0; x < 8; x++) {
-                    vertices[vertexOffset + x] = cubeVertices[x];
-                    colors[vertexOffset + x] = Color32.Lerp(black, white, perlinValue);
-                }
+                    Vector3[] cubeVertices = CreateCubeVertices(origin);
+                    for (int i = 0; i < 8; i++) {
+                        vertices[vertexOffset + i] = cubeVertices[i];
+                        float perlinValue = Mathf.PerlinNoise(xNoiseOffset + (x + .1f) * scale, zNoiseOffset + (z + .1f) * scale);
+                        colors[vertexOffset + i] = Color32.Lerp(black, white, perlinValue * (1 - y / (float)height));
+                    }
 
-                int[] cubeTriangles = CreateCubeTriangles(vertexOffset);
-                for (int x = 0; x < trianglesPerCube; x++) {
-                    triangles[triangleOffset + x] = cubeTriangles[x];
+                    int[] cubeTriangles = CreateCubeTriangles(vertexOffset);
+                    for (int i = 0; i < trianglesPerCube; i++) {
+                        triangles[triangleOffset + i] = cubeTriangles[i];
+                    }
                 }
             }
         }

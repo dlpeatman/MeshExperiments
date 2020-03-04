@@ -56,6 +56,7 @@
      <Compile Include="Assets\Scripts\Cubes.cs" />
      <Compile Include="Assets\Scripts\MeshGenerator.cs" />
      <Compile Include="Assets\Scripts\SphereGenerator.cs" />
+     <Compile Include="Assets\Scripts\Triangulation.cs" />
  <Reference Include="Unity.TextMeshPro.Editor">
  <HintPath>C:/Users/David/Mesh Experiments/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
  </Reference>
