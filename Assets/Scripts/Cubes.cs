@@ -11,25 +11,39 @@ public class Cubes : MonoBehaviour {
 
     private int width;
     private int length;
+    private float xNoiseOffset;
+    private float zNoiseOffset;
+    private float scale;
 
     public int Width { get => width; }
     public int Length { get => length; }
+    public float XNoiseOffset { get => xNoiseOffset; set => xNoiseOffset = value; }
+    public float ZNoiseOffset { get => zNoiseOffset; set => zNoiseOffset = value; }
+    public float Scale { get => scale; set => scale = value; }
 
-    public Cubes(int width, int length) {
-        Reset(width, length);
+    public Cubes(int width, int length, float xNoiseOffset, float zNoiseOffset, float scale) {
+        Reset(width, length, xNoiseOffset, zNoiseOffset, scale);
     }
 
     void Start() {
-        Reset(width, length);
+        Generate();
     }
 
     void Update() {
-        Reset(width, length);
+        Generate();
     }
 
-    public void Reset(int width, int length) {
+    public void Reset(int width, int length, float xNoiseOffset, float zNoiseOffset, float scale) {
         this.width = width;
         this.length = length;
+        this.xNoiseOffset = xNoiseOffset;
+        this.zNoiseOffset = zNoiseOffset;
+        this.scale = scale;
+
+        Generate();
+    }
+
+    public void Generate() {
         if (mesh == null) {
             mesh = new Mesh();
         } else {
@@ -37,20 +51,17 @@ public class Cubes : MonoBehaviour {
         }
         GetComponent<MeshFilter>().mesh = mesh;
 
-        Generate();
-    }
-
-    public void Generate() {
         CreateMesh();
-    }
-
-    public void CleanUp() {
     }
 
     void CreateMesh() {
         Vector3[] vertices = new Vector3[width * length * 8];
+        Color32[] colors = new Color32[vertices.Length];
         int trianglesPerCube = 12 * 3;
         int[] triangles = new int[width * length * trianglesPerCube];
+
+        Color32 black = new Color32(2, 2, 2, 255);
+        Color32 white = new Color32(255, 255, 255, 255);
 
         int cubeIndex = 0;
         for (int i = 0; i < length; i++) {
@@ -58,19 +69,24 @@ public class Cubes : MonoBehaviour {
                 Vector3 origin = new Vector3(-width / 2f + j, 0, -length / 2f + i);
 
                 Vector3[] cubeVertices = CreateCubeVertices(origin);
+                float perlinValue = Mathf.PerlinNoise(xNoiseOffset + j * scale, zNoiseOffset + i * scale);
+                int vertexOffset = cubeIndex * 8;
                 for (int x = 0; x < 8; x++) {
-                    vertices[cubeIndex * 8 + x] = cubeVertices[x];
+                    vertices[vertexOffset + x] = cubeVertices[x];
+                    colors[vertexOffset + x] = Color32.Lerp(black, white, perlinValue);
                 }
 
                 int[] cubeTriangles = CreateCubeTriangles(cubeIndex * 8);
+                int triangleIndex = cubeIndex * trianglesPerCube;
                 for (int x = 0; x < trianglesPerCube; x++) {
-                    triangles[cubeIndex * trianglesPerCube + x] = cubeTriangles[x];
+                    triangles[triangleIndex + x] = cubeTriangles[x];
                 }
 
                 cubeIndex++;
             }
         }
         mesh.vertices = vertices;
+        mesh.colors32 = colors;
         mesh.triangles = triangles;
         mesh.RecalculateNormals();
     }

@@ -10,18 +10,10 @@ public class CubesEditor : Editor {
         Cubes cubes = (Cubes)target;
         int width = EditorGUILayout.IntSlider("Width", cubes.Width, 1, 20);
         int length = EditorGUILayout.IntSlider("Length", cubes.Length, 1, 20);
+        float xNoiseOffset = EditorGUILayout.Slider("X Noise Offset", cubes.XNoiseOffset, 0, 10);
+        float zNoiseOffset = EditorGUILayout.Slider("Z Noise Offset", cubes.ZNoiseOffset, 0, 10);
+        float scale = EditorGUILayout.Slider("Scale", cubes.Scale, .1f, 1f);
 
-        cubes.Reset(width, length);
-
-        GUILayout.BeginHorizontal();
-        if (GUILayout.Button("Generate")) {
-            Debug.Log("Manually Generating...");
-            cubes.Generate();
-        }
-        if (GUILayout.Button("Clear")) {
-            Debug.Log("Clearing...");
-            cubes.CleanUp();
-        }
-        GUILayout.EndHorizontal();
+        cubes.Reset(width, length, xNoiseOffset, zNoiseOffset, scale);
     }
 }
