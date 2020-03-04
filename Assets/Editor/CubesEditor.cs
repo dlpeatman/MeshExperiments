@@ -14,6 +14,8 @@ public class CubesEditor : Editor {
         float zNoiseOffset = EditorGUILayout.Slider("Z Noise Offset", cubes.ZNoiseOffset, 0, 10);
         float scale = EditorGUILayout.Slider("Scale", cubes.Scale, .1f, 1f);
 
-        cubes.Reset(width, length, xNoiseOffset, zNoiseOffset, scale);
+        if (GUI.changed) {
+            cubes.Reset(width, length, xNoiseOffset, zNoiseOffset, scale);
+        }
     }
 }

@@ -55,36 +55,35 @@ public class Cubes : MonoBehaviour {
     }
 
     void CreateMesh() {
-        Vector3[] vertices = new Vector3[width * length * 8];
-        Color32[] colors = new Color32[vertices.Length];
         int trianglesPerCube = 12 * 3;
-        int[] triangles = new int[width * length * trianglesPerCube];
+        var black = new Color32(0, 0, 0, 255);
+        var white = new Color32(255, 255, 255, 255);
 
-        Color32 black = new Color32(2, 2, 2, 255);
-        Color32 white = new Color32(255, 255, 255, 255);
+        Vector3[] vertices = new Vector3[width * length * 8];
+        Color32[] colors = new Color32[width * length * 8];
+        int[] triangles = new int[width * length * trianglesPerCube];
 
         int cubeIndex = 0;
         for (int i = 0; i < length; i++) {
-            for (int j = 0; j < width; j++) {
+            for (int j = 0; j < width; j++, cubeIndex++) {
                 Vector3 origin = new Vector3(-width / 2f + j, 0, -length / 2f + i);
+                int vertexOffset = cubeIndex * 8;
+                int triangleOffset = cubeIndex * trianglesPerCube;
 
                 Vector3[] cubeVertices = CreateCubeVertices(origin);
                 float perlinValue = Mathf.PerlinNoise(xNoiseOffset + j * scale, zNoiseOffset + i * scale);
-                int vertexOffset = cubeIndex * 8;
                 for (int x = 0; x < 8; x++) {
                     vertices[vertexOffset + x] = cubeVertices[x];
                     colors[vertexOffset + x] = Color32.Lerp(black, white, perlinValue);
                 }
 
-                int[] cubeTriangles = CreateCubeTriangles(cubeIndex * 8);
-                int triangleIndex = cubeIndex * trianglesPerCube;
+                int[] cubeTriangles = CreateCubeTriangles(vertexOffset);
                 for (int x = 0; x < trianglesPerCube; x++) {
-                    triangles[triangleIndex + x] = cubeTriangles[x];
+                    triangles[triangleOffset + x] = cubeTriangles[x];
                 }
-
-                cubeIndex++;
             }
         }
+
         mesh.vertices = vertices;
         mesh.colors32 = colors;
         mesh.triangles = triangles;
@@ -122,13 +121,13 @@ public class Cubes : MonoBehaviour {
         };
     }
 
-    void OnDrawGizmos() {
-        if (mesh == null) {
-            return;
-        }
+    // void OnDrawGizmos() {
+    //     if (mesh == null) {
+    //         return;
+    //     }
 
-        for (int j = 0; j < mesh.vertices.Length; j++) {
-            Gizmos.DrawSphere(mesh.vertices[j], .05f);
-        }
-    }
+    //     for (int j = 0; j < mesh.vertices.Length; j++) {
+    //         Gizmos.DrawSphere(mesh.vertices[j], .05f);
+    //     }
+    // }
 }
