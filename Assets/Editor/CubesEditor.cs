@@ -8,6 +8,7 @@ public class CubesEditor : Editor {
     public override void OnInspectorGUI() {
 
         Cubes cubes = (Cubes)target;
+        bool gizmos = EditorGUILayout.Toggle("Draw Gizmos", cubes.DrawGizmos);
         int width = EditorGUILayout.IntSlider("Width", cubes.Width, 1, 20);
         int length = EditorGUILayout.IntSlider("Length", cubes.Length, 1, 20);
         int height = EditorGUILayout.IntSlider("Height", cubes.Height, 1, 20);
@@ -18,7 +19,7 @@ public class CubesEditor : Editor {
         float isoLevel = EditorGUILayout.Slider("IsoLevel", cubes.IsoLevel, 0f, 1f);
 
         if (GUI.changed) {
-            cubes.Reset(width, length, height, xNoiseOffset, yNoiseOffset, zNoiseOffset, scale, isoLevel);
+            cubes.Reset(gizmos, width, length, height, xNoiseOffset, yNoiseOffset, zNoiseOffset, scale, isoLevel);
         }
     }
 }
