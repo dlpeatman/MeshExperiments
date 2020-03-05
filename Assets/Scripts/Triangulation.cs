@@ -360,14 +360,14 @@ public class Triangulation {
     }
 
     public static int[] GetTriangles(int cubeIndex) {
-        int[] triangles = new int[4 * 3];
-        int j;
-        for (j = 0; Triangulation.triTable[cubeIndex, j] != -1; j += 3) {
-            triangles[j] = Triangulation.triTable[cubeIndex, j];
-            triangles[j + 1] = Triangulation.triTable[cubeIndex, j + 1];
-            triangles[j + 2] = Triangulation.triTable[cubeIndex, j + 2];
+        int[] triangles = new int[5 * 3];
+        int i;
+        for (i = 0; Triangulation.triTable[cubeIndex, i] != -1; i += 3) {
+            triangles[i] = Triangulation.triTable[cubeIndex, i];
+            triangles[i + 1] = Triangulation.triTable[cubeIndex, i + 1];
+            triangles[i + 2] = Triangulation.triTable[cubeIndex, i + 2];
         }
-        return triangles.Take(j).ToArray();
+        return triangles.Take(i).ToArray();
     }
 
     private static Vector3 Interpolate(float isoLevel, CubePoint p1, CubePoint p2) {

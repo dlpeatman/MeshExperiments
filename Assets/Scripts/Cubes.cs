@@ -9,7 +9,6 @@ public class Cubes : MonoBehaviour {
 
     private Mesh mesh;
 
-    private bool drawGizmos;
     private int width;
     private int length;
     private int height;
@@ -19,7 +18,6 @@ public class Cubes : MonoBehaviour {
     private float scale;
     private float isoLevel;
 
-    public bool DrawGizmos { get => drawGizmos; set => drawGizmos = value; }
     public int Width { get => width; }
     public int Length { get => length; }
     public int Height { get => height; set => height = value; }
@@ -29,8 +27,8 @@ public class Cubes : MonoBehaviour {
     public float Scale { get => scale; set => scale = value; }
     public float IsoLevel { get => isoLevel; set => isoLevel = value; }
 
-    public Cubes(bool drawGizmos, int width, int length, int height, float xNoiseOffset, float yNoiseOffset, float zNoiseOffset, float scale, float isoLevel) {
-        Reset(drawGizmos, width, length, height, xNoiseOffset, yNoiseOffset, zNoiseOffset, scale, isoLevel);
+    public Cubes(int width, int length, int height, float xNoiseOffset, float yNoiseOffset, float zNoiseOffset, float scale, float isoLevel) {
+        Reset(width, length, height, xNoiseOffset, yNoiseOffset, zNoiseOffset, scale, isoLevel);
     }
 
     void Start() {
@@ -41,11 +39,10 @@ public class Cubes : MonoBehaviour {
         Generate();
     }
 
-    public void Reset(bool drawGizmos, int width, int length, int height, float xNoiseOffset, float yNoiseOffset, float zNoiseOffset, float scale, float isoLevel) {
-        this.drawGizmos = drawGizmos;
+    public void Reset(int width, int length, int height, float xNoiseOffset, float yNoiseOffset, float zNoiseOffset, float scale, float isoLevel) {
         this.width = width;
         this.length = length;
-        this.Height = height;
+        this.height = height;
         this.xNoiseOffset = xNoiseOffset;
         this.yNoiseOffset = yNoiseOffset;
         this.zNoiseOffset = zNoiseOffset;
@@ -70,6 +67,7 @@ public class Cubes : MonoBehaviour {
         int trianglesPerCube = 4 * 3;
         var black = new Color32(0, 0, 0, 255);
         var white = new Color32(255, 255, 255, 255);
+        var chunkOrigin = new Vector3(0, 0, 0);
 
         Vector3[] vertices = new Vector3[width * length * height * 12];
         // Color32[] colors = new Color32[width * length * height * 8];
@@ -80,10 +78,10 @@ public class Cubes : MonoBehaviour {
         for (int y = 0; y < height; y++) {
             for (int z = 0; z < length; z++) {
                 for (int x = 0; x < width; x++, cube++) {
-                    Vector3 origin = new Vector3(-width / 2f + x, y, -length / 2f + z);
+                    Vector3 cubeOrigin = chunkOrigin + new Vector3(x, y, z);
                     int vertexOffset = cube * 12;
 
-                    Vector3[] cubeVertices = CreateCubeVertices(origin);
+                    Vector3[] cubeVertices = CreateCubeVertices(cubeOrigin);
                     Triangulation.CubePoint[] cubePoints = new Triangulation.CubePoint[8];
                     for (int i = 0; i < 8; i++) {
                         Vector3 vertex = cubeVertices[i];
@@ -149,15 +147,5 @@ public class Cubes : MonoBehaviour {
             offset+4,offset+5,offset+6,
             offset+4,offset+6,offset+7
         };
-    }
-
-    void OnDrawGizmos() {
-        if (mesh == null || !drawGizmos) {
-            return;
-        }
-
-        for (int j = 0; j < mesh.vertices.Length; j++) {
-            Gizmos.DrawSphere(mesh.vertices[j], .05f);
-        }
     }
 }
