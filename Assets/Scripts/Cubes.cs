@@ -1,13 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static Triangulation.CubePoint;
 
-[RequireComponent(typeof(MeshFilter))]
 [RequireComponent(typeof(MeshRenderer))]
 public class Cubes : MonoBehaviour {
 
-    private Mesh mesh;
+    private Dictionary<Vector3, Chunk> chunkDictionary;
 
     private int width;
     private int length;
@@ -49,21 +47,43 @@ public class Cubes : MonoBehaviour {
         this.scale = scale;
         this.isoLevel = isoLevel;
 
+        if (chunkDictionary == null) {
+            chunkDictionary = new Dictionary<Vector3, Chunk>();
+        }
+
         Generate();
     }
 
-    public void Generate() {
-        if (mesh == null) {
-            mesh = new Mesh();
-        } else {
-            mesh.Clear();
-        }
-        GetComponent<MeshFilter>().mesh = mesh;
+    public void CleanUp() {
+        foreach (KeyValuePair<Vector3, Chunk> entry in chunkDictionary) {
 
-        CreateMesh();
+        }
     }
 
-    void CreateMesh() {
+    public void Generate() {
+        var origin = new Vector3(0, 0, 0);
+        var material = GetComponent<MeshRenderer>().sharedMaterial;
+        if (chunkDictionary.ContainsKey(origin)) {
+            var chunk = chunkDictionary[origin];
+            if (chunk == null || chunk.GameObject == null) {
+                chunkDictionary.Remove(origin);
+                var gameObject = new GameObject("Origin");
+                chunk = new Chunk(gameObject, material, transform);
+                chunkDictionary.Add(origin, chunk);
+            }
+            CreateMesh(chunk);
+        } else {
+            var gameObject = new GameObject("Origin");
+            var chunk = new Chunk(gameObject, material, transform);
+            chunkDictionary.Add(origin, chunk);
+            CreateMesh(chunk);
+        }
+    }
+
+    void CreateMesh(Chunk chunk) {
+        var mesh = chunk.Mesh;
+        mesh.Clear();
+
         int trianglesPerCube = 4 * 3;
         var black = new Color32(0, 0, 0, 255);
         var white = new Color32(255, 255, 255, 255);
