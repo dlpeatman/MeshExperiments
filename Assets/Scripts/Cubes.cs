@@ -1,10 +1,23 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Threading.Tasks;
+using System.Linq;
 
 [RequireComponent(typeof(MeshRenderer))]
 public class Cubes : MonoBehaviour {
 
+    public struct MeshData {
+        public Vector3[] vertices;
+        public Color32[] colors;
+        public int[] triangles;
+
+        public MeshData(Vector3[] vertices, Color32[] colors, int[] triangles) {
+            this.vertices = vertices;
+            this.colors = colors;
+            this.triangles = triangles;
+        }
+    }
     private static Color32 green = new Color32(0, 180, 60, 255);
     private static Color32 grey = new Color32(80, 80, 80, 255);
     private static Color32 white = new Color32(255, 255, 255, 255);
@@ -65,6 +78,8 @@ public class Cubes : MonoBehaviour {
             octaveOffsets[i] = new Vector2(offsetX, offsetZ);
         }
 
+        var chunkTasks = new Dictionary<Chunk, Task<MeshData>>();
+
         for (int z = 0; z < 4; z++) {
             for (int x = 0; x < 4; x++) {
                 var name = "Chunk [" + x + ", " + z + "]";
@@ -86,15 +101,26 @@ public class Cubes : MonoBehaviour {
                     chunkDictionary.Add(name, chunk);
                 }
                 chunk.GameObject.SetActive(true);
-                CreateMesh(location, chunk);
+
+                chunkTasks.Add(chunk, Task<MeshData>.Run(() => CreateMesh(location)));
             }
+        }
+
+        Task.WaitAll(chunkTasks.Values.ToArray());
+
+        foreach (KeyValuePair<Chunk, Task<MeshData>> entry in chunkTasks) {
+            var meshData = entry.Value.Result;
+            var mesh = entry.Key.Mesh;
+
+            mesh.Clear();
+            mesh.vertices = meshData.vertices;
+            mesh.colors32 = meshData.colors;
+            mesh.triangles = meshData.triangles;
+            mesh.RecalculateNormals();
         }
     }
 
-    void CreateMesh(Vector3 origin, Chunk chunk) {
-        var mesh = chunk.Mesh;
-        mesh.Clear();
-
+    MeshData CreateMesh(Vector3 origin) {
         int trianglesPerCube = 4 * 3;
 
         Vector3[] vertices = new Vector3[width * length * height * 12];
@@ -138,11 +164,7 @@ public class Cubes : MonoBehaviour {
                 }
             }
         }
-
-        mesh.vertices = vertices;
-        mesh.colors32 = colors;
-        mesh.triangles = triangles;
-        mesh.RecalculateNormals();
+        return new MeshData(vertices, colors, triangles);
     }
 
     float CalculateIsoValue(Vector3 vertex) {
