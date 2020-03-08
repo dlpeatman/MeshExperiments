@@ -44,7 +44,7 @@ public class Cubes : MonoBehaviour {
     }
 
     void Start() {
-        Generate();
+        Reset();
     }
 
     void Update() {
@@ -101,6 +101,7 @@ public class Cubes : MonoBehaviour {
                     chunkDictionary.Add(name, chunk);
                 }
                 chunk.GameObject.SetActive(true);
+                chunk.GameObject.AddComponent<MeshCollider>();
 
                 chunkTasks.Add(chunk, Task<MeshData>.Run(() => CreateMesh(location)));
             }
